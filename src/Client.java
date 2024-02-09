@@ -3,22 +3,30 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
     private static Socket socket;
     private static PrintWriter writer;
     private static BufferedReader reader;
+    private static Scanner scanner = new Scanner(System.in);
+    private static String input;
 
     public static void start(int port) {
         try {
-            System.out.println("Starting client");
-            socket = new Socket("127.0.0.1", port);
+            System.out.println("Please enter the hosts IP:\n");
+            input = scanner.nextLine();
+
+            System.out.println("Starting client on " + input);
+            socket = new Socket(input, port);
             System.out.println("Client started");
 
             writer = new PrintWriter(socket.getOutputStream(), true);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             System.out.println("Reader and writer started");
+            System.out.println("You may now enter messages below");
 
+            // receiving
             new Thread(() -> {
                 try {
                     String msg = "";
@@ -32,6 +40,13 @@ public class Client {
                 }
             }).start();
 
+            // Sending
+            new Thread(() -> {
+                while (true) {
+                    send(scanner.nextLine());
+                }
+            }).start();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -39,12 +54,6 @@ public class Client {
 
     public static void send(String msg) {
         System.out.println("Sending message");
-        writer.write(msg);
-    }
-
-    public static void main(String[] args) {
-        start(Server.DEFAULT_PORT);
-
-        send("test");
+        writer.println(msg);
     }
 }
