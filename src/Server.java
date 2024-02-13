@@ -17,15 +17,17 @@ public class Server {
             // the .accept() method waits for a client to connect before moving on in the code
             // you can use this with a loop and threads to handle multiple clients
             new Thread (() -> {
-                try {
-                    clientSocket = serverSocket.accept();
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
-                    clientHandler.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                while (true) {
+                    try {
+                        clientSocket = serverSocket.accept();
+                        ClientHandler clientHandler = new ClientHandler(clientSocket);
+                        clientHandler.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
-                System.out.println("Server socket started");
+                    System.out.println("Server socket started");
+                }
             }).start();
 
         } catch (IOException e) {

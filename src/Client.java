@@ -23,27 +23,22 @@ public class Client {
 
             writer = new PrintWriter(socket.getOutputStream(), true);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            System.out.println("Reader and writer started");
-            System.out.println("You may now enter messages below");
+            System.out.println("Client reader and writer started");
+            System.out.println("You may now enter messages below:");
 
-            // receiving
+            // transmitting
             new Thread(() -> {
-                try {
-                    String msg = "";
+                String msg = "";
 
+                try {
                     while (msg != null) {
+                        send(scanner.nextLine());
+
                         msg = reader.readLine();
                         System.out.println("\rMessage: " + msg);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
-            }).start();
-
-            // Sending
-            new Thread(() -> {
-                while (true) {
-                    send(scanner.nextLine());
                 }
             }).start();
 
