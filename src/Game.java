@@ -79,22 +79,19 @@ public class Game {
      * @author Kiefer Menard
      */
     private static void requestInput() {
-        // Thread so the rest of the program doesn't stop (Useful for networking)
-        new Thread (() -> {
-            // Prints out the player
-            System.out.print((isPlayer1 ? RED : YELLOW) + " Player " + (isPlayer1 ? 1 : 2) + ": ");
-            // Check to make sure the input was a number
-            try {
-                input = scanner.nextInt();
-                scanner.nextLine();
-            } catch (RuntimeException e) {
-                // Ask for a new number
-                scanner.nextLine();
-                System.out.println("Invalid input, must be 1-7, try again.");
+        // Prints out the player
+        System.out.print((isPlayer1 ? RED : YELLOW) + " Player " + (isPlayer1 ? 1 : 2) + ": ");
+        // Check to make sure the input was a number
+        try {
+            input = scanner.nextInt();
+            scanner.nextLine();
+        } catch (RuntimeException e) {
+            // Ask for a new number
+            scanner.nextLine();
+            System.out.println("Invalid input, must be 1-7, try again.");
 
-                requestInput();
-            }
-        }).start();
+            requestInput();
+        }
     }
 
     /**
@@ -105,31 +102,28 @@ public class Game {
     private static void handleInput() {
         input -= 1; // Decrement the input since arrays start at 0
 
-        // Thread so the rest of the program doesn't stop (Useful for networking)
-        new Thread (() -> {
-            // Make sure the number is between 0-6
-            if (!(0 <= input && input < 7)) {
-                // Ask for a new number if it's not
-                System.out.println("Invalid input, must be 1-7, try again.");
-                requestInput();
-                handleInput();
-                return;
-            }
-
-            // Add a token to the board if there's room
-            for (y = 5; y >= 0; y--) {
-                if (board[y][input].equals(DIVIDERL + " " + DIVIDERR)) {
-                    board[y][input] = DIVIDERL + (isPlayer1 ? RED : YELLOW) + DIVIDERR;
-
-                    return;
-                }
-            }
-
-            // If there's no room, ask for a new input
-            System.out.println("Column is full, try again.");
+        // Make sure the number is between 0-6
+        if (!(0 <= input && input < 7)) {
+            // Ask for a new number if it's not
+            System.out.println("Invalid input, must be 1-7, try again.");
             requestInput();
             handleInput();
-        }).start();
+            return;
+        }
+
+        // Add a token to the board if there's room
+        for (y = 5; y >= 0; y--) {
+            if (board[y][input].equals(DIVIDERL + " " + DIVIDERR)) {
+                board[y][input] = DIVIDERL + (isPlayer1 ? RED : YELLOW) + DIVIDERR;
+
+                return;
+            }
+        }
+
+        // If there's no room, ask for a new input
+        System.out.println("Column is full, try again.");
+        requestInput();
+        handleInput();
     }
 
     /**
@@ -160,7 +154,7 @@ public class Game {
                     board[y][i - 1] = colorText();
                     board[y][i] = colorText();
 
-                    printWin();
+                    printWin(true);
 
                     return true;
                 }
@@ -187,7 +181,7 @@ public class Game {
                     board[i - 1][input] = colorText();
                     board[i][input] = colorText();
 
-                    printWin();
+                    printWin(false);
 
                     return true;
                 }
@@ -199,12 +193,12 @@ public class Game {
         }
 
         // Bottom-left to top-right diagonal win
-        count = 0;
-        masterArray = diagonalBLTR();
-        xArray = masterArray.get(0);
-        yArray = masterArray.get(1);
+        count = 0; // Reset the count
+        masterArray = diagonal("BLTR"); // Get the diagonal spots
+        xArray = masterArray.get(0); // X coordinates
+        yArray = masterArray.get(1); // Y coordinates
 
-        // Look 3 on the top and bottom of the last placed token.
+        // Look 3 to each side diagonally of the last placed token.
         for (int i = 0; i < xArray.size(); i++) {
             // If the spot has the same color token, increment count
             if (board[yArray.get(i)][xArray.get(i)].equals(DIVIDERL + token + DIVIDERR)) {
@@ -217,7 +211,7 @@ public class Game {
                     board[yArray.get(i - 1)][xArray.get(i - 1)] = colorText();
                     board[yArray.get(i)][xArray.get(i)] = colorText();
 
-                    printWin();
+                    printWin(false);
 
                     return true;
                 }
@@ -229,11 +223,12 @@ public class Game {
         }
 
         // Top-left to bottom-right diagonal win
-        count = 0;
-        masterArray = diagonalBLTR();
-        xArray = masterArray.get(0);
-        yArray = masterArray.get(1);
+        count = 0; // Reset the count
+        masterArray = diagonal("TLBR"); // Get the diagonal spots
+        xArray = masterArray.get(0); // X coordinates
+        yArray = masterArray.get(1); // Y coordinates
 
+        // Look 3 to each side diagonally of the last placed token.
         for (int i = 0; i < xArray.size(); i++) {
             // If the spot has the same color token, increment count
             if (board[yArray.get(i)][xArray.get(i)].equals(DIVIDERL + token + DIVIDERR)) {
@@ -246,7 +241,7 @@ public class Game {
                     board[yArray.get(i - 1)][xArray.get(i - 1)] = colorText();
                     board[yArray.get(i)][xArray.get(i)] = colorText();
 
-                    printWin();
+                    printWin(false);
 
                     return true;
                 }
@@ -260,109 +255,132 @@ public class Game {
         return false;
     }
 
-    public static ArrayList<ArrayList<Integer>> diagonalBLTR() {
-        ArrayList<ArrayList<Integer>> masterArray = new ArrayList<>();
-        ArrayList<Integer> xArray = new ArrayList<>();
-        ArrayList<Integer> yArray = new ArrayList<>();
-        int tempX = input;
-        int tempY = y;
+    /**
+     * The diagonal method gets the spots in a diagonal of the token based on the direction specified.
+     *
+     * @param direction The direction that the diagonal should go in.
+     * @return The x and y coordinates of the spots.
+     *
+     * @author Kiefer Menard
+     */
+    public static ArrayList<ArrayList<Integer>> diagonal(String direction) {
+        ArrayList<ArrayList<Integer>> masterArray = new ArrayList<>(); // Contains the x and y arrays, so they can be returned together
+        ArrayList<Integer> xArray = new ArrayList<>(); // The x coordinates of the spots
+        ArrayList<Integer> yArray = new ArrayList<>(); // The y coordinates of the spots
+        int tempX = input; // A temporary variable to store the x
+        int tempY = y; // A temporary variable to store the y
 
+        // Loop backward through the array 3 times or until a border, will need to be in reverse order later
         for (int i = 0; i < 3; i++) {
-            tempX--;
-            tempY--;
+            tempX--; // Decrement x
 
-            if (tempX < 0 || tempY < 0) {
+            // Check if x has gone out of bounds
+            if (tempX < 0) {
                 break;
             }
 
+            // Either increment or decrement y based on the direction, and check if it's gone out of bounds
+            if (direction.equals("BLTR")) {
+                tempY++; // Increment y
+
+                // Check for out of bounds
+                if (tempY > 5) {
+                    break;
+                }
+            } else {
+                tempY--; // Decrement y
+
+                // Check for out of bounds
+                if (tempY < 0) {
+                    break;
+                }
+            }
+
+            // Add the value to the array after it's passed the checks
             xArray.add(tempX);
             yArray.add(tempY);
         }
 
+        // Reverse the arrays so they are the correct orders
         Collections.reverse(xArray);
         Collections.reverse(yArray);
 
+        // Reset the temp vars
         tempX = input;
         tempY = y;
 
+        // Add the current spot to the array
         xArray.add(tempX);
         yArray.add(tempY);
 
+        // Loop forward through the array 3 times or until a border
         for (int i = 0; i < 3; i++) {
-            tempX++;
-            tempY++;
+            tempX++; // Increment x
 
-            if (tempX > 6 || tempY > 5) {
+            // Check if x has gone out of bounds
+            if (tempX > 6) {
                 break;
             }
 
+            // Either decrement or increment y based on the direction, and check if it's gone out of bounds
+            if (direction.equals("BLTR")) {
+                tempY--; // Decrement y
+
+                // Check for out of bounds
+                if (tempY < 0) {
+                    break;
+                }
+            } else {
+                tempY++; // Increment y
+
+                // Check for out of bounds
+                if (tempY > 5) {
+                    break;
+                }
+            }
+
+            // Add the value to the array after it's passed the checks
             xArray.add(tempX);
             yArray.add(tempY);
         }
 
+        // Add the arrays to the master array, so they can both be returned
         masterArray.add(xArray);
         masterArray.add(yArray);
         return masterArray;
     }
 
-    public static ArrayList<ArrayList<Integer>> diagonalTLBR() {
-        ArrayList<ArrayList<Integer>> masterArray = new ArrayList<>();
-        ArrayList<Integer> xArray = new ArrayList<>();
-        ArrayList<Integer> yArray = new ArrayList<>();
-        int tempX = input;
-        int tempY = y;
-
-        for (int i = 0; i < 3; i++) {
-            tempX--;
-            tempY++;
-
-            if (tempX < 0 || tempY < 0) {
-                break;
-            }
-
-            xArray.add(tempX);
-            yArray.add(tempY);
-        }
-
-        Collections.reverse(xArray);
-        Collections.reverse(yArray);
-
-        tempX = input;
-        tempY = y;
-
-        xArray.add(tempX);
-        yArray.add(tempY);
-
-        for (int i = 0; i < 3; i++) {
-            tempX++;
-            tempY--;
-
-            if (tempX > 6 || tempY > 5) {
-                break;
-            }
-
-            xArray.add(tempX);
-            yArray.add(tempY);
-        }
-
-        masterArray.add(xArray);
-        masterArray.add(yArray);
-        return masterArray;
-    }
-
-    private static void printWin() {
+    /**
+     * The printWin method prints out the winning game board + the winner.
+     *
+     * @param horizontal Whether the winning move was horizontal or not
+     *
+     * @author Kiefer Menard
+     */
+    private static void printWin(boolean horizontal) {
+        // Prints the board
         System.out.println(" 1   2   3   4   5   6   7");
 
         for (String[] spots : board) {
             for (String spot : spots) {
-                System.out.print(spot + " " + "\u001B[0m");
+                // Change whether the color goes before or after the space depending on the direction of the win
+                if (horizontal) System.out.print(spot + " \u001B[0m");
+                else System.out.print(spot + "\u001B[0m ");
             }
             System.out.println();
         }
 
+        // Tell which player won
         System.out.println("\nPlayer " + (isPlayer1 ? 1: 2) + " wins!");
     }
 
+    /**
+     * The colorText method adds a magenta highlight to the background of the spot.
+     *
+     * @return The String with the highlighted spot.
+     *
+     * @author Kiefer Menard
+     */
     private static String colorText() {
         return "\u001B[45m" + DIVIDERL + (isPlayer1 ? "\u001B[31m": "\u001B[33m") + "◉\u001B[0m\u001B[45m" +DIVIDERR;
     }
