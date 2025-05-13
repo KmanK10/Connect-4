@@ -375,13 +375,13 @@ public class Game {
     }
 
     /**
-     * The colorText method adds a magenta highlight to the background of the spot.
+     * The colorText method adds a green highlight to the background of the spot.
      *
      * @return The String with the highlighted spot.
      *
      * @author Kiefer Menard
      */
     private static String colorText() {
-        return "\u001B[45m" + DIVIDERL + (isPlayer1 ? "\u001B[31m": "\u001B[33m") + "◉\u001B[0m\u001B[45m" +DIVIDERR;
+        return "\u001B[42m" + DIVIDERL + (isPlayer1 ? "\u001B[31m": "\u001B[33m") + "◉\u001B[0m\u001B[42m" +DIVIDERR;
     }
 }
